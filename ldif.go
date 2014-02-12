@@ -25,3 +25,41 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+/**
+ *  LDIF Spec: http://www.ietf.org/rfc/rfc2849.txt
+ *
+ *  Example 1: An simple LDAP file with two entries
+ *
+ *  version: 1
+ *  dn: cn=Barbara Jensen, ou=Product Development, dc=airius, dc=com
+ *  objectclass: top
+ *  objectclass: person
+ *  objectclass: organizationalPerson
+ *  cn: Barbara Jensen
+ *  cn: Barbara J Jensen
+ *  cn: Babs Jensen
+ *  sn: Jensen
+ *  uid: bjensen
+ *  telephonenumber: +1 408 555 1212
+ *  description: A big sailing fan.
+ *
+ *  dn: cn=Bjorn Jensen, ou=Accounting, dc=airius, dc=com
+ *  objectclass: top
+ *  objectclass: person
+ *  objectclass: organizationalPerson
+ *  cn: Bjorn Jensen
+ *  sn: Jensen
+ *  telephonenumber: +1 408 555 1212
+ *
+ */
+
+package openldap
+
+import (
+	"fmt"
+)
+
+func (self *LdapEntry) Ldif() string {
+	return fmt.Sprintf("dn: %s\r\n", self.dn)
+}
