@@ -1,6 +1,7 @@
-/*
+/**
  *
- * Copyright (C) 2012 - Marc Quinton.
+ * Original work Copyright (C) 2012 [Marc Quinton]
+ * Modified work Copyright 2014 Robin Harper
  *
  * Use of this source code is governed by the MIT Licence :
  *  http://opensource.org/licenses/mit-license.php
@@ -12,10 +13,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -330,7 +331,7 @@ const (
 	LDAP_OPT_X_GSSAPI_ALLOW_REMOTE_PRINCIPAL = 0x6201
 )
 
-// 
+//
 // OpenLDAP per connection tcp-keepalive settings
 // (Linux only, ignored where unsupported)
 const (

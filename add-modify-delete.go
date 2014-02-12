@@ -1,6 +1,7 @@
-/*
+/**
  *
- * Copyright (C) 2012 - Marc Quinton.
+ * Original work Copyright (C) 2012 [Marc Quinton]
+ * Modified work Copyright 2014 Robin Harper
  *
  * Use of this source code is governed by the MIT Licence :
  *  http://opensource.org/licenses/mit-license.php
@@ -12,10 +13,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -27,46 +28,46 @@
 
 package openldap
 
-/* #include <stdlib.h>
-#include <stdio.h>
-#define LDAP_DEPRECATED 1
-#include <ldap.h>
+/**
+  #include <stdlib.h>
+  #include <stdio.h>
+  #define LDAP_DEPRECATED 1
+  #include <ldap.h>
 
-// goc can not use union on structs ; so create a new type with same attributes and size
-// fixme : support binary mods (mod_bvalues)
-typedef struct ldapmod_str {
-	int		       mod_op;
-	char		   *mod_type;
-	char           **mod_vals;
-} LDAPModStr;
-
-
-int _ldap_add(LDAP *ld, char* dn, LDAPModStr **attrs){
-
-	//API: int ldap_add_ext_s(LDAP *ld, char *dn, LDAPMod **attrs, LDAPControl *sctrls, LDAPControl *cctrls );
-	// nota : cast (LDAPMod **) is possible because structs have same size
-	return ldap_add_ext_s(ld, dn, (LDAPMod **)attrs, NULL, NULL);
-}
-
-int _ldap_modify(LDAP *ld, char* dn, LDAPModStr **mods ){
- 
-	// nota : cast (LDAPMod **) is possible because structs have same size
-	return ldap_modify_ext_s( ld, dn, (LDAPMod **)mods, NULL, NULL);
-}
-
-int _ldap_rename (LDAP *ld, char *dn, char *newrdn, char *newSuperior, int deleteoldrdn){
-	//API: int ldap_rename_s( ld, dn, newrdn, newparent, deleteoldrdn, sctrls[], cctrls[])
-
-	return ldap_rename_s(ld, dn, newrdn, newSuperior, deleteoldrdn, NULL, NULL);
-}
-
-void _ldap_mods_free (LDAPModStr **mods, int freemods){
-	//API: void ldap_mods_free(LDAPMod **mods, int freemods);
-	return ldap_mods_free((LDAPMod **)mods, freemods);
-}
+  // goc can not use union on structs ; so create a new type with same attributes and size
+  // fixme : support binary mods (mod_bvalues)
+  typedef struct ldapmod_str {
+  	int		       mod_op;
+  	char		   *mod_type;
+  	char           **mod_vals;
+  } LDAPModStr;
 
 
+  int _ldap_add(LDAP *ld, char* dn, LDAPModStr **attrs){
+
+  	//API: int ldap_add_ext_s(LDAP *ld, char *dn, LDAPMod **attrs, LDAPControl *sctrls, LDAPControl *cctrls );
+  	// nota : cast (LDAPMod **) is possible because structs have same size
+  	return ldap_add_ext_s(ld, dn, (LDAPMod **)attrs, NULL, NULL);
+  }
+
+  int _ldap_modify(LDAP *ld, char* dn, LDAPModStr **mods ){
+
+  	// nota : cast (LDAPMod **) is possible because structs have same size
+  	return ldap_modify_ext_s( ld, dn, (LDAPMod **)mods, NULL, NULL);
+  }
+
+  int _ldap_rename (LDAP *ld, char *dn, char *newrdn, char *newSuperior, int deleteoldrdn){
+  	//API: int ldap_rename_s( ld, dn, newrdn, newparent, deleteoldrdn, sctrls[], cctrls[])
+
+  	return ldap_rename_s(ld, dn, newrdn, newSuperior, deleteoldrdn, NULL, NULL);
+  }
+
+  void _ldap_mods_free (LDAPModStr **mods, int freemods){
+  	//API: void ldap_mods_free(LDAPMod **mods, int freemods);
+  	return ldap_mods_free((LDAPMod **)mods, freemods);
+  }
 */
+
 // #cgo CFLAGS: -DLDAP_DEPRECATED=1
 // #cgo linux CFLAGS: -DLINUX=1
 // #cgo LDFLAGS: -lldap -llber
@@ -74,20 +75,19 @@ import "C"
 
 import (
 	"errors"
-	"unsafe"
 	"fmt"
+	"unsafe"
 )
 
-
-func (self *Ldap) doModify(dn string, attrs map[string][]string, changeType int, full_add bool) (int){
+func (self *Ldap) doModify(dn string, attrs map[string][]string, changeType int, full_add bool) int {
 
 	_dn := C.CString(dn)
 	defer C.free(unsafe.Pointer(_dn))
-	
+
 	mods := make([]*C.LDAPModStr, len(attrs)+1)
 	// mods[len] = nil by default
 
-	count:= 0
+	count := 0
 	for key, values := range attrs {
 
 		// transform []string to C.char** null terminated array (attributes argument)
@@ -103,7 +103,7 @@ func (self *Ldap) doModify(dn string, attrs map[string][]string, changeType int,
 		mod.mod_op = C.int(changeType)
 		mod.mod_type = C.CString(key)
 		mod.mod_vals = &_values[0]
-		
+
 		defer C.free(unsafe.Pointer(mod.mod_type))
 
 		mods[count] = &mod
@@ -116,7 +116,7 @@ func (self *Ldap) doModify(dn string, attrs map[string][]string, changeType int,
 	if full_add {
 		// API: int ldap_add (LDAP *ld, LDAP_CONST char *dn, LDAPMod **mods )
 		rv = int(C._ldap_add(self.conn, _dn, &mods[0]))
-	} else{
+	} else {
 		// API: int ldap_modify (LDAP *ld, LDAP_CONST char *dn, LDAPMod **mods )
 		rv = int(C._ldap_modify(self.conn, _dn, &mods[0]))
 	}
@@ -126,7 +126,7 @@ func (self *Ldap) doModify(dn string, attrs map[string][]string, changeType int,
 	return rv
 }
 
-func (self *Ldap) Modify(dn string, attrs map[string][]string) (error){
+func (self *Ldap) Modify(dn string, attrs map[string][]string) error {
 
 	changeType := C.LDAP_MOD_REPLACE
 	full_add := false
@@ -138,7 +138,7 @@ func (self *Ldap) Modify(dn string, attrs map[string][]string) (error){
 	return nil
 }
 
-func (self *Ldap) ModifyDel(dn string, attrs map[string][]string) (error){
+func (self *Ldap) ModifyDel(dn string, attrs map[string][]string) error {
 
 	changeType := C.LDAP_MOD_DELETE
 	full_add := false
@@ -150,7 +150,7 @@ func (self *Ldap) ModifyDel(dn string, attrs map[string][]string) (error){
 	return nil
 }
 
-func (self *Ldap) ModifyAdd(dn string, attrs map[string][]string) (error){
+func (self *Ldap) ModifyAdd(dn string, attrs map[string][]string) error {
 
 	changeType := C.LDAP_MOD_ADD
 	full_add := false
@@ -161,7 +161,7 @@ func (self *Ldap) ModifyAdd(dn string, attrs map[string][]string) (error){
 	return nil
 }
 
-func (self *Ldap) Add(dn string, attrs map[string][]string) (error){
+func (self *Ldap) Add(dn string, attrs map[string][]string) error {
 
 	changeType := C.LDAP_MOD_ADD
 	full_add := true
@@ -172,7 +172,7 @@ func (self *Ldap) Add(dn string, attrs map[string][]string) (error){
 	return nil
 }
 
-func (self *Ldap) Delete(dn string) (error){
+func (self *Ldap) Delete(dn string) error {
 
 	_dn := C.CString(dn)
 	defer C.free(unsafe.Pointer(_dn))
@@ -203,7 +203,7 @@ func (self *Ldap) Delete(dn string) (error){
 // the search.
 // FIXME: support NULL and "" values for newSuperior parameter.
 //
-func (self *Ldap) Rename(dn string, newrdn string, newSuperior string, deleteOld bool) (error){
+func (self *Ldap) Rename(dn string, newrdn string, newSuperior string, deleteOld bool) error {
 
 	_dn := C.CString(dn)
 	defer C.free(unsafe.Pointer(_dn))
@@ -218,7 +218,7 @@ func (self *Ldap) Rename(dn string, newrdn string, newSuperior string, deleteOld
 	if deleteOld {
 		_delete = 1
 	}
- 
+
 	// API: int ldap_rename (LDAP *ld, char *newrdn, char *newSuperior, int deleteoldrdn)
 	rv := C._ldap_rename(self.conn, _dn, _newrdn, _newSuperior, _delete)
 
